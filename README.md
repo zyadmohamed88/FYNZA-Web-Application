@@ -1,5 +1,5 @@
 <div align="center">
-  <h1>🛡️ FYNZA AppAlication</h1>
+  <h1>🛡️ FYNZA Application</h1>
   <h3>Next-Generation Secure Messaging & Workspace Ecosystem</h3>
   
   [![Python](https://img.shields.io/badge/Python-3.10+-blue.svg)](https://www.python.org)
