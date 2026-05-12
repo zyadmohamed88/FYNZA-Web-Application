@@ -87,12 +87,12 @@ python app.py
 
 This project was developed by a dedicated team of 6 members:
 
-1. **[Name 1]** - *[Role / Contribution]*
-2. **[Name 2]** - *[Role / Contribution]*
-3. **[Name 3]** - *[Role / Contribution]*
-4. **[Name 4]** - *[Role / Contribution]*
-5. **[Name 5]** - *[Role / Contribution]*
-6. **[Name 6]** - *[Role / Contribution]*
+1. *Zyad Elsheshtawy*
+2. *Ahmed Elshkieh*
+3. *Abdalla Elbedawee*
+4. *Ahmed Tarek*
+5. *Ali Elqulasi*
+6. *Zyad Ammar*
 
 *(Please replace the placeholders above with the actual names and roles of your team members).*
 
