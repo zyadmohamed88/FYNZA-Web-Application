@@ -1,0 +1,886 @@
+<!DOCTYPE html>
+<html lang="en" dir="ltr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>FYNZA - Secure Chat</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Bootstrap Icons (JS uses them) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    <!-- Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* WhatsApp-like Modern Chat Dashboard */
+        body {
+            overflow: hidden;
+        }
+        .dash-shell {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            z-index: 10;
+            background: transparent; /* Show global blobs */
+        }
+        
+        .chat-workspace {
+            display: flex;
+            flex: 1;
+            min-height: 0;
+            /* Removed gap and margins */
+        }
+        
+        /* Sidebar List */
+        .chat-sidebar {
+            width: 30%;
+            min-width: 300px;
+            max-width: 400px;
+            background: rgba(10, 14, 23, 0.85);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            opacity: 1;
+            transform: translateX(0);
+        }
+
+        /* Sidebar Hidden State with Smooth Transition */
+        .sidebar-hidden .chat-sidebar {
+            width: 0 !important;
+            min-width: 0 !important;
+            max-width: 0 !important;
+            opacity: 0 !important;
+            transform: translateX(-30px);
+            border-right-width: 0;
+            pointer-events: none;
+        }
+
+        .chat-main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: transparent;
+            min-width: 0;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        .chat-sidebar__header {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            background: transparent;
+        }
+        
+        .chat-sidebar__header-top {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            width: 100%;
+        }
+
+        .chat-sidebar__user-info {
+            font-size: 0.75rem;
+            color: var(--accent-color);
+            opacity: 0.8;
+            font-family: monospace;
+            word-break: break-all;
+        }
+        
+        .chat-sidebar__title {
+            color: var(--text-main);
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+        
+        .chat-sidebar__actions button {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+            cursor: pointer;
+            margin-left: 10px;
+            transition: color 0.3s;
+        }
+        .chat-sidebar__actions button:hover {
+            color: var(--accent-color);
+        }
+
+        .chat-search-box {
+            padding: 0.8rem;
+            border-bottom: 1px solid var(--border-color);
+        }
+        .chat-search-box .input-group {
+            background: var(--bg-main);
+            border-radius: 20px;
+            padding: 0.2rem 0.8rem;
+        }
+        .chat-search-box input {
+            padding: 0.5rem;
+            font-size: 0.9rem;
+        }
+
+        .chat-contacts-scroll {
+            flex: 1;
+            overflow-y: auto;
+        }
+
+        /* Modern Contact Item */
+        .chat-contact-item {
+            display: flex;
+            align-items: center;
+            padding: 0.8rem 1rem;
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            transition: background 0.2s;
+            gap: 12px;
+        }
+        .chat-contact-item:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+        .chat-contact-item--active {
+            background: rgba(0, 255, 204, 0.08);
+            border-left: 4px solid var(--accent-color);
+        }
+        .chat-contact-item .peer-avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--text-main);
+            flex-shrink: 0;
+        }
+
+        /* Avatar for new contact item structure */
+        .chat-contact-item__avatar {
+            width: 38px;
+            height: 38px;
+            border-radius: 50%;
+            background: var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            color: var(--text-main);
+            flex-shrink: 0;
+            overflow: hidden;
+        }
+
+        .chat-contact-item__name {
+            color: var(--text-main);
+            font-weight: 500;
+            font-size: 0.95rem;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+        .chat-contact-item--active .peer-avatar {
+            background: var(--accent-color);
+            color: #000;
+            box-shadow: 0 0 10px var(--accent-glow);
+        }
+        
+        .chat-contact-item__badge {
+            background: linear-gradient(135deg, var(--accent-color), #00ff88);
+            color: #000;
+            font-size: 0.75rem;
+            font-weight: bold;
+            border-radius: 12px;
+            padding: 2px 8px;
+            margin-left: auto;
+            box-shadow: 0 0 8px var(--accent-glow);
+        }
+
+        .chat-contact-item__bio {
+            font-size: 0.7rem;
+            color: var(--text-muted);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            max-width: 150px;
+        }
+
+        /* Profile Banner in Chat Header */
+        .chat-profile-banner {
+            height: 80px;
+            width: 100%;
+            background: linear-gradient(90deg, #1a1f2c, #2a3040);
+            position: absolute;
+            top: 0;
+            left: 0;
+            z-index: 0;
+            opacity: 0.5;
+            transition: background 0.5s ease;
+        }
+
+        /* Chat Main Structure (Transitions handled above) */
+        .chat-main {
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .chat-main__head {
+            padding: 0.8rem 1.5rem;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: rgba(10, 14, 23, 0.85);
+        }
+
+        .chat-main__body {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            background-color: rgba(10, 14, 23, 0.4); /* Transparent with no pattern */
+            padding: 1rem 1.5rem;
+        }
+
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            padding-bottom: 1rem;
+        }
+
+        /* Chat Bubbles (WhatsApp Style) */
+        .chat-bubble-row {
+            display: flex;
+            width: 100%;
+            margin-bottom: 0.5rem;
+        }
+        .chat-bubble-row--me {
+            justify-content: flex-end;
+        }
+        .chat-bubble-row--them {
+            justify-content: flex-start;
+        }
+        
+        .chat-bubble {
+            max-width: 50%;
+            padding: 0.6rem 1rem;
+            min-height: 56px; /* ensure short messages have room */
+            border-radius: 12px;
+            position: relative;
+            word-wrap: break-word;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.3);
+            font-size: 0.95rem;
+            line-height: 1.4;
+              display: flex;
+              flex-direction: row; /* put time and message on same line by default */
+              align-items: flex-end;
+              gap: 8px;
+        }
+        
+        /* My Messages (Vibrant Gradient) */
+        .chat-bubble-row--me .chat-bubble {
+            background: linear-gradient(135deg, rgba(0, 255, 204, 0.25), rgba(0, 150, 255, 0.15));
+            border: 1px solid rgba(0, 255, 204, 0.4);
+            border-radius: 12px 12px 0 12px;
+            color: #fff;
+            padding: 0.7rem 1rem;
+            backdrop-filter: blur(15px);
+            box-shadow: 0 4px 15px rgba(0, 255, 204, 0.15);
+            flex-direction: row-reverse;
+        }
+        
+        /* Their Messages (Darker Glassy) */
+        .chat-bubble-row--them .chat-bubble {
+            background: rgba(255, 255, 255, 0.08);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px 12px 12px 0;
+            color: rgba(255, 255, 255, 0.95);
+            padding: 0.7rem 1rem;
+            backdrop-filter: blur(15px);
+            flex-direction: row-reverse;
+        }
+        
+        .chat-bubble-meta {
+            font-size: 0.75rem;
+            color: rgba(255, 255, 255, 0.7);
+            position: static; /* inline with content */
+            margin: 0;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Segoe UI Mono", monospace;
+            font-variant-numeric: tabular-nums;
+            font-weight: 500;
+            white-space: nowrap;
+        }
+
+        /* Reserve space inside bubble body for meta (time/tick) so short messages don't collide */
+        .chat-bubble-body {
+            padding-bottom: 0.2rem; /* reduced, since meta is inline */
+            flex: 1 1 auto;
+            min-width: 0; /* allow truncation */
+            font-family: var(--font-body);
+            font-size: 0.95rem;
+            color: var(--text-main);
+        }
+
+        /* When a message contains a reply quote, stack vertically to keep quote full width */
+            .chat-bubble.has-reply {
+                flex-direction: column;
+                align-items: stretch;
+            }
+
+        .chat-bubble img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 8px;
+        }
+
+        .chat-bubble-meta i {
+            margin-left: 4px; /* space between time and check ticks */
+        }
+        .chat-bubble-meta span { margin-left:6px; padding-left:4px; }
+
+        /* Call overlay / video tweaks */
+        #callOverlay { backdrop-filter: blur(6px); }
+        #callBox .btn { min-width:80px; }
+        #inCallVideos video { box-shadow: 0 6px 20px rgba(0,0,0,0.6); }
+
+        /* Emoji Reactions Toolbar */
+        .chat-reactions__toolbar {
+            opacity: 0;
+            transition: opacity 0.2s ease;
+            pointer-events: none;
+            display: flex;
+            gap: 4px;
+            margin-top: 4px;
+            position: absolute;
+            z-index: 100;
+        }
+        /* Hover rule removed to allow click-to-show via .show class */
+        .chat-reactions__toolbar.show {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        .chat-reaction-pill {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 12px;
+            padding: 2px 6px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            color: #fff;
+            transition: background 0.2s;
+        }
+        .chat-reaction-pill:hover {
+            background: rgba(255, 255, 255, 0.25);
+        }
+        
+        .chat-tick {
+            color: #9ca3af; /* Gray by default */
+            font-size: 0.9rem;
+        }
+        .chat-tick--read {
+            color: #34B7F1 !important; /* Blue when read */
+        }
+
+        /* Modern Composer Area */
+        .chat-composer {
+            background: rgba(10, 14, 23, 0.85);
+            border-top: 1px solid var(--border-color);
+            padding: 0.8rem 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+        
+        .chat-composer__input-wrapper {
+            flex: 1;
+            background: var(--bg-main);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            display: flex;
+            align-items: center;
+            padding: 0 0.5rem;
+        }
+
+        .chat-composer__input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            padding: 0.8rem 1rem;
+            resize: none;
+            font-family: var(--font-body);
+            height: 45px;
+        }
+        
+        .chat-composer__input:focus {
+            outline: none;
+        }
+        
+        .chat-composer__btn {
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.3rem;
+            padding: 0.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        .chat-composer__btn:hover {
+            color: var(--accent-color);
+        }
+
+        .chat-composer__send {
+            width: 45px;
+            height: 45px;
+            border-radius: 50%;
+            background: var(--accent-color);
+            color: #000;
+            border: none;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            font-size: 1.2rem;
+            transition: transform 0.2s;
+            flex-shrink: 0;
+        }
+        .chat-composer__send:hover {
+            transform: scale(1.05);
+        }
+
+        /* Empty State */
+        .chat-empty {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            text-align: center;
+            opacity: 0.7;
+        }
+        .chat-empty h2 {
+            color: var(--text-main);
+            margin: 1rem 0 0.5rem;
+            font-weight: 500;
+        }
+
+        /* Utils & Overrides */
+        .d-none { display: none !important; }
+        .input-group {
+            display: flex;
+            align-items: center;
+            width: 100%;
+        }
+        .input-group input {
+            background: transparent;
+            border: none;
+            color: var(--text-main);
+            flex: 1;
+            outline: none;
+        }
+        
+        /* JS Fallback Classes (To fix JS adding Bootstrap classes) */
+        .bg-dark { background: var(--bg-card) !important; }
+        .border { border: 1px solid var(--border-color) !important; }
+        .border-secondary { border-color: var(--border-color) !important; }
+        .text-white-50 { color: var(--text-muted) !important; }
+        .rounded { border-radius: 8px !important; }
+        .p-2 { padding: 0.5rem !important; }
+        .d-flex { display: flex; }
+        .flex-column { flex-direction: column; }
+        .justify-content-between { justify-content: space-between; }
+        .align-items-center { align-items: center; }
+        .text-truncate { white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+        .fw-bold { font-weight: bold; }
+        .badge { display: inline-block; padding: 0.25em 0.4em; font-size: 75%; font-weight: 700; line-height: 1; text-align: center; white-space: nowrap; vertical-align: baseline; border-radius: 0.25rem; }
+        .bg-danger { background-color: #dc3545 !important; }
+        .rounded-pill { border-radius: 50rem !important; }
+        .gap-2 { gap: 0.5rem !important; }
+        /* Clean Custom Styling for Request Cards */
+        .chat-request-item {
+            display: flex;
+            flex-direction: column;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 0.8rem;
+            border-radius: 8px;
+            border: 1px solid var(--border-color);
+            margin-bottom: 0.5rem;
+        }
+        .chat-request-email {
+            color: var(--text-main);
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 0.8rem;
+            word-break: break-all;
+        }
+        .chat-request-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+        .chat-btn {
+            flex: 1;
+            padding: 0.5rem;
+            font-size: 0.8rem;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            font-family: var(--font-body);
+            font-weight: 600;
+            transition: opacity 0.2s;
+        }
+        .chat-btn:hover { opacity: 0.8; }
+        .chat-btn-accept {
+            background: var(--accent-color);
+            color: #000;
+        }
+        .chat-btn-decline {
+            background: transparent;
+            border: 1px solid #dc3545;
+            color: #dc3545;
+        }
+        
+        /* Modals */
+        .chat-modal-backdrop {
+            position: fixed; top:0; left:0; width:100%; height:100%; background: rgba(0,0,0,0.8); z-index: 1000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .chat-modal-panel {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-color);
+            padding: 2rem;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 400px;
+        }
+    </style>
+    <style>
+        /* Hide bio in contact/search lists to only show avatar + name */
+        .chat-contact-item__bio { display: none !important; }
+        .search-result-bio { display: none !important; }
+        /* Enforce contact row body to show only the name element (hide any other details like bio or id) */
+        #contactsList .chat-contact-item__body { display: none !important; }
+        #contactsList .chat-contact-item__body > * { display: none !important; }
+        /* Hide unread badge in contacts list so only name+avatar remain */
+        #contactsList .chat-contact-item__badge { display: none !important; }
+        /* Ensure avatar + name layout stays compact */
+        #contactsList .chat-contact-item { gap: 8px; align-items: center; }
+
+        /* Profile Editor Modal */
+        .profile-modal {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.85); z-index: 10000;
+            display: flex; align-items: center; justify-content: center;
+        }
+        .profile-card {
+            background: var(--bg-card);
+            border: 1px solid var(--accent-color);
+            border-radius: 16px;
+            width: 90%; max-width: 450px;
+            padding: 2rem;
+            position: relative;
+            box-shadow: 0 10px 40px rgba(0,255,204,0.15);
+        }
+        .profile-card h3 { margin-top: 0; color: var(--accent-color); margin-bottom: 1.5rem; }
+        .profile-field { margin-bottom: 1.2rem; }
+        .profile-field label { display: block; font-size: 0.8rem; color: var(--text-muted); margin-bottom: 0.4rem; }
+        .profile-field input, .profile-field textarea {
+            width: 100%; background: rgba(255,255,255,0.05); border: 1px solid var(--border-color);
+            border-radius: 8px; padding: 0.8rem; color: var(--text-main); outline: none; transition: border-color 0.3s;
+        }
+        .profile-field input:focus, .profile-field textarea:focus { border-color: var(--accent-color); }
+        .profile-actions { display: flex; gap: 1rem; margin-top: 2rem; }
+        .profile-actions button { flex: 1; padding: 0.8rem; border-radius: 8px; font-weight: 600; cursor: pointer; transition: 0.3s; }
+        .btn-save { background: var(--accent-color); color: #000; border: none; }
+        .btn-save:hover { filter: brightness(1.1); box-shadow: 0 0 15px var(--accent-glow); }
+        .btn-cancel { background: transparent; color: var(--text-muted); border: 1px solid var(--border-color); }
+        .btn-cancel:hover { background: rgba(255,255,255,0.05); }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- Global Animated Background (To match other pages) -->
+    <div class="global-bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    <div class="cyber-particles">
+        <div class="particle p-1"></div>
+        <div class="particle p-2"></div>
+        <div class="particle p-3"></div>
+        <div class="particle p-4"></div>
+        <div class="particle p-5"></div>
+        <div class="particle p-6"></div>
+        <div class="particle p-7"></div>
+        <div class="particle p-8"></div>
+    </div>
+    <div class="scanlines"></div>
+
+    <div class="dash-shell">
+        <div id="statusMessage" class="d-none" role="status" style="color:var(--accent-color); margin-bottom:1rem; text-align:center;"></div>
+
+        <div class="chat-workspace fade-in-up" id="chatAppContainer">
+            <!-- Sidebar -->
+            <aside class="chat-sidebar" id="appSidebar">
+                <div class="chat-sidebar__header">
+                    <div class="chat-sidebar__header-top">
+                        <div class="chat-sidebar__title">
+                            <a href="home.html" style="font-family:var(--font-heading); color:var(--accent-color); text-decoration:none; text-shadow: 0 0 15px var(--accent-glow); transition: color 0.1s, text-shadow 0.1s; font-weight:900; font-size: 1.8rem; letter-spacing:2px;">FYNZA</a>
+                        </div>
+                        <div class="chat-sidebar__actions">
+                            <button type="button" onclick="toggleSearchModal()" title="Add" aria-label="Add new chat"><i class="bi bi-plus-lg"></i></button>
+                            <button type="button" id="logoutBtn" title="Logout"><i class="bi bi-box-arrow-right"></i></button>
+                        </div>
+                    </div>
+                    <div id="currentUserEmailDisplay" class="chat-sidebar__user-info"></div>
+                    <div style="margin-top: 10px; padding: 0 10px;">
+                        <a href="#" onclick="location.href='workspace.html#token='+localStorage.getItem('token'); return false;" style="display:flex; align-items:center; justify-content:center; gap:8px; width:100%; padding:10px; border-radius:8px; background:rgba(0,0,0,0.3); border:1px solid var(--border-color); color:var(--text-main); text-decoration:none; font-size:0.9rem; font-weight:500; transition:0.2s;" onmouseover="this.style.borderColor='var(--accent-color)'; this.style.color='var(--accent-color)'" onmouseout="this.style.borderColor='var(--border-color)'; this.style.color='var(--text-main)'">
+                            <i class="fa-solid fa-layer-group"></i> Workspaces
+                        </a>
+                    </div>
+                    <!-- Profile editor modal -->
+                    <!-- profile modal moved to end of document to avoid being blurred -->
+                </div>
+                
+                <div class="chat-search-box">
+                    <div class="input-group">
+                        <span style="color:var(--text-muted);"><i class="bi bi-search"></i></span>
+                        <input id="contactFilterInput" type="text" placeholder="Search or start new chat" autocomplete="off">
+                    </div>
+                </div>
+
+                <div id="pendingRequestsArea" class="d-none" style="padding: 0.5rem 1rem;">
+                    <div style="display:flex; justify-content:space-between; color:var(--text-muted); font-size:0.85rem; margin-bottom:0.5rem; text-transform:uppercase; letter-spacing:1px;">
+                        <span>Requests</span>
+                        <span id="pendingCount" class="badge bg-danger rounded-pill"></span>
+                    </div>
+                    <div id="pendingRequestsList" style="display:flex; flex-direction:column; gap:0.5rem;"></div>
+                </div>
+                
+                <div id="contactsList" class="chat-contacts-scroll"></div>
+            </aside>
+
+            <!-- Main Chat -->
+            <main class="chat-main" id="appMain">
+                <div id="chatHeader" class="chat-main__head d-none" style="position:relative; overflow:hidden;">
+                    <div id="peerBanner" class="chat-profile-banner"></div>
+                    <div style="display:flex; align-items:center; gap:12px; position:relative; z-index:1;">
+                        <button id="backToSidebarBtn" class="chat-composer__btn" style="margin-right: 5px;" onclick="toggleSidebar()" title="Back">
+                            <i class="bi bi-chevron-left"></i>
+                        </button>
+                        <div id="chatHeaderAvatar" style="width:36px; height:36px; border-radius:50%; background:var(--accent-color); color:#000; display:flex; align-items:center; justify-content:center; font-weight:bold; font-size:1rem; box-shadow: 0 0 10px var(--accent-glow);">?</div>
+                        <div style="display:flex; flex-direction:column; justify-content:center;">
+                            <div id="activeContactName" style="color:var(--text-main); font-weight:600; font-size:1.1rem; line-height:1.2;"></div>
+                            <div id="activeContactBio" style="color:var(--text-muted); font-size:0.8rem; font-style:italic; line-height:1.2;"></div>
+                        </div>
+                    </div>
+                    <div style="display:flex; gap:15px; position:relative;">
+                        <button class="chat-composer__btn" onclick="toggleInChatSearch()" title="Search"><i class="bi bi-search"></i></button>
+                        <button class="chat-composer__btn" onclick="startCall(false)" id="startVoiceCallBtn" title="Call"><i class="bi bi-telephone"></i></button>
+                        <button class="chat-composer__btn" onclick="startCall(true)" id="startVideoCallBtn" title="Video Call"><i class="bi bi-camera-video"></i></button>
+                        <button class="chat-composer__btn" id="chatMenuBtn" title="More"><i class="bi bi-three-dots-vertical"></i></button>
+                        <button class="chat-composer__btn" onclick="closeChat()" title="Close"><i class="bi bi-x-lg"></i></button>
+                        
+                        <div id="chatHeaderMenu" class="d-none" style="position:absolute; right:40px; top:40px; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; display:flex; flex-direction:column; gap:0.5rem; z-index:100; box-shadow:0 4px 12px rgba(0,0,0,0.5);">
+                            <button style="background:transparent; border:none; color:var(--text-main); text-align:left; cursor:pointer; padding:0.5rem;" id="chatMenuSearch"><i class="bi bi-search me-2"></i> Search messages</button>
+                            <button style="background:transparent; border:none; color:var(--text-main); text-align:left; cursor:pointer; padding:0.5rem;" onclick="pinLastMessage(); document.getElementById('chatHeaderMenu').classList.add('d-none')"><i class="bi bi-pin-angle me-2"></i> Pin last message</button>
+                            <button style="background:transparent; border:none; color:var(--text-main); text-align:left; cursor:pointer; padding:0.5rem;" onclick="exportCurrentChat(); document.getElementById('chatHeaderMenu').classList.add('d-none')"><i class="bi bi-download me-2"></i> Export chat</button>
+                        </div>
+                    </div>
+                </div>
+
+                <div id="inChatSearchPanel" class="d-none" style="padding: 0.8rem 1.5rem; background:rgba(0,0,0,0.2); border-bottom:1px solid var(--border-color);">
+                    <div class="input-group" style="background:var(--bg-main); border-radius:20px; padding:0.2rem 1rem; border:1px solid var(--border-color);">
+                        <span style="color:var(--text-muted);"><i class="bi bi-funnel"></i></span>
+                        <input id="inChatSearchInput" type="search" placeholder="Search in chat..." autocomplete="off">
+                        <button type="button" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;" onclick="document.getElementById('inChatSearchInput').value=''; document.getElementById('inChatSearchInput').dispatchEvent(new Event('input'))"><i class="bi bi-x-circle-fill"></i></button>
+                    </div>
+                </div>
+
+                <div class="chat-main__body">
+                    <div id="pinnedMessageBar" class="d-none" style="background:rgba(0,255,204,0.1); border-left:4px solid var(--accent-color); padding:0.8rem; border-radius:4px; color:var(--text-main); display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+                        <div style="display:flex; flex-direction:column; gap:2px;">
+                            <span style="color:var(--accent-color); font-size:0.8rem; font-weight:bold;">Pinned Message</span>
+                            <span id="pinnedMessageText" style="font-size:0.9rem;"></span>
+                        </div>
+                        <button style="background:transparent; border:none; color:var(--text-muted); cursor:pointer;" onclick="clearPinnedMessage()"><i class="bi bi-x-lg"></i></button>
+                    </div>
+
+                    <div id="emptyChatState" class="chat-empty">
+                        <div style="width: 100px; height: 100px; border-radius: 50%; background: rgba(0, 255, 204, 0.1); display: flex; align-items: center; justify-content: center; margin-bottom: 1rem;">
+                            <i class="fa-solid fa-lock" style="font-size: 3rem; color: var(--accent-color);"></i>
+                        </div>
+                        <h2>FYNZA Web</h2>
+                        <p>Send and receive messages with end-to-end encryption.<br>Select a chat from the left sidebar to start messaging.</p>
+                    </div>
+
+                    <div class="d-none flex-column flex-grow-1" id="activeChatContainer" style="height:100%; display:flex; position: relative;">
+                        <div id="chatMessages" class="chat-messages" onscroll="handleChatScroll()"></div>
+                        
+                        <button id="scrollToBottomBtn" class="d-none" style="position: absolute; bottom: 80px; right: 20px; width: 40px; height: 40px; border-radius: 50%; background: var(--bg-card); border: 1px solid var(--border-color); color: var(--accent-color); box-shadow: 0 4px 10px rgba(0,0,0,0.5); cursor: pointer; display: flex; align-items: center; justify-content: center; transition: 0.2s;" onclick="scrollToBottom()">
+                            <i class="fa-solid fa-chevron-down"></i>
+                        </button>
+                        
+                        <!-- Call UI: outgoing/incoming and in-call video/audio -->
+                        <div id="callOverlay" class="d-none" style="position:absolute; left:0; top:0; right:0; bottom:0; display:flex; align-items:center; justify-content:center; z-index:500;">
+                            <div id="callBox" style="background:var(--bg-card); border:1px solid var(--border-color); padding:1rem; border-radius:12px; width:320px; max-width:90%; text-align:center; box-shadow:0 6px 30px rgba(0,0,0,0.6);">
+                                <div id="callStatus" style="font-weight:600; margin-bottom:8px;">Calling…</div>
+                                <div id="callPeer" style="color:var(--text-muted); margin-bottom:12px;"></div>
+                                <div style="display:flex; gap:8px; justify-content:center;">
+                                    <button id="acceptCallBtn" class="btn btn-primary d-none" onclick="window.acceptCall()">Accept</button>
+                                    <button id="rejectCallBtn" class="btn btn-secondary d-none" onclick="window.rejectCall()">Reject</button>
+                                    <button id="endCallBtn" class="btn btn-danger d-none" onclick="window.endCall()">End</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div id="inCallVideos" class="d-none" style="position:absolute; right:1.5rem; bottom:6.5rem; z-index:600; display:flex; gap:8px; align-items:flex-end;">
+                            <video id="remoteVideo" autoplay playsinline style="width:240px; height:135px; background:#000; border-radius:8px;"></video>
+                            <video id="localVideo" autoplay muted playsinline style="width:90px; height:67px; background:#000; border-radius:8px;"></video>
+                        </div>
+                        
+                        <div id="peerTypingBar" class="d-none" style="color:var(--accent-color); font-size:0.85rem; margin-top:0.5rem; padding-left: 1rem;"></div>
+
+                        <div id="replyDraftBar" class="d-none" style="background:rgba(0,0,0,0.3); padding:0.8rem; border-radius:8px 8px 0 0; border-left:4px solid var(--accent-color); display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+                            <div>
+                                <div style="color:var(--accent-color); font-size:0.85rem; font-weight:600;">Replying to...</div>
+                                <div id="replyDraftPreview" style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;"></div>
+                            </div>
+                            <button style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:1.2rem;" onclick="cancelReply()"><i class="bi bi-x"></i></button>
+                        </div>
+
+                        <div id="attachmentPreviewBar" class="d-none" style="background:rgba(0,0,0,0.3); padding:0.8rem; border-radius:8px 8px 0 0; border-left:4px solid #ff00ff; display:flex; justify-content:space-between; align-items:center; margin-top:0.5rem;">
+                            <div style="display: flex; align-items: center; gap: 10px;">
+                                <i class="fa-solid fa-file-lines" style="color: #ff00ff; font-size: 1.5rem;"></i>
+                                <div>
+                                    <div style="color:#ff00ff; font-size:0.85rem; font-weight:600;">Attachment</div>
+                                    <div id="attachmentFileName" style="color:var(--text-muted); font-size:0.9rem; margin-top:4px;">filename.jpg</div>
+                                </div>
+                            </div>
+                            <button style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:1.2rem;" onclick="cancelAttachment()"><i class="bi bi-x"></i></button>
+                        </div>
+
+                        <form id="chatForm" class="chat-composer">
+                            <input type="file" id="fileAttachment" class="d-none" accept="image/*, audio/*, video/*, .pdf, .zip, .txt" onchange="handleFileSelection(event)">
+                            
+                            <button type="button" class="chat-composer__btn" onclick="toggleEmojiPopover(event)" title="Emoji"><i class="fa-regular fa-face-smile"></i></button>
+                            <button type="button" class="chat-composer__btn" onclick="document.getElementById('fileAttachment').click()" title="Attach File"><i class="fa-solid fa-paperclip"></i></button>
+                            <button type="button" id="selfDestructBtn" class="chat-composer__btn" onclick="toggleSelfDestruct()" title="Self-Destruct Message"><i class="fa-solid fa-stopwatch"></i></button>
+                            
+                            <div class="chat-composer__input-wrapper">
+                                <textarea id="chatInput" class="chat-composer__input" rows="1" autocomplete="off" placeholder="Type a message..."></textarea>
+                            </div>
+                            
+                            <button type="submit" id="sendMsgBtn" class="chat-composer__send d-none" title="Send"><i class="fa-solid fa-paper-plane"></i></button>
+                            <button type="button" id="voiceRecordBtn" class="chat-composer__send" style="background: var(--bg-card); color: var(--accent-color); border: 1px solid var(--accent-color);" title="Record Voice Note" onmousedown="startRecording()" onmouseup="stopRecording()"><i class="fa-solid fa-microphone"></i></button>
+                            
+                            <div id="emojiPopover" class="d-none" style="position:absolute; bottom:80px; left:20px; background:var(--bg-card); border:1px solid var(--border-color); padding:1rem; border-radius:12px; box-shadow:0 10px 25px rgba(0,0,0,0.5);">
+                                <div id="emojiPopoverGrid" style="display:grid; grid-template-columns:repeat(6, 1fr); gap:0.8rem; font-size:1.4rem; cursor:pointer;"></div>
+                            </div>
+                        </form>
+                    </div>
+                </div>
+            </main>
+        </div>
+
+        <!-- Context Menu -->
+        <div id="msgContextMenu" class="d-none" style="position:absolute; background:var(--bg-card); border:1px solid var(--border-color); border-radius:8px; padding:0.5rem; display:flex; flex-direction:column; gap:0.2rem; z-index:100; box-shadow:0 4px 15px rgba(0,0,0,0.5);" role="menu" onclick="event.stopPropagation()">
+            <button type="button" id="msgContextReply" style="background:transparent; border:none; color:var(--text-main); text-align:left; cursor:pointer; padding:0.5rem 1rem; border-radius:4px;"><i class="bi bi-reply me-2"></i> Reply</button>
+            <button type="button" id="msgContextCopy" style="background:transparent; border:none; color:var(--text-main); text-align:left; cursor:pointer; padding:0.5rem 1rem; border-radius:4px;"><i class="bi bi-clipboard me-2"></i> Copy</button>
+            <button type="button" id="msgContextPin" style="background:transparent; border:none; color:var(--text-main); text-align:left; cursor:pointer; padding:0.5rem 1rem; border-radius:4px;"><i class="bi bi-pin-angle me-2"></i> Pin</button>
+        </div>
+
+        <!-- Modals -->
+        <!-- Modals -->
+        <div id="searchModal" class="chat-modal-backdrop d-none" onclick="if(event.target===this)toggleSearchModal()">
+            <div class="chat-modal-panel" onclick="event.stopPropagation()" style="width:450px; max-width:95%; padding: 25px; border: 1px solid var(--accent-color); box-shadow: 0 0 20px rgba(0,255,204,0.2);">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:1rem; border-bottom:1px solid var(--border-color); padding-bottom:0.8rem;">
+                    <h5 style="color:var(--text-main); margin:0; font-weight:600; font-size:0.95rem;"><i class="bi bi-person-plus" style="color:var(--accent-color); margin-right:0.6rem;"></i>New Chat</h5>
+                    <button type="button" style="background:transparent; border:none; color:var(--text-muted); cursor:pointer; font-size:1rem;" onclick="toggleSearchModal()"><i class="bi bi-x-lg"></i></button>
+                </div>
+                <form id="searchForm" style="margin-bottom:0.8rem;">
+                    <div class="input-group" style="background:var(--bg-main); border:1px solid var(--border-color); border-radius:8px; padding:0.2rem 0.5rem;">
+                        <span style="padding:0.4rem; color:var(--text-muted); font-size:0.9rem;"><i class="bi bi-envelope"></i></span>
+                        <input type="text" id="searchInput" placeholder="Enter 14-digit ID..." required style="padding:0.4rem; font-size:0.9rem;"/>
+                        <button type="submit" class="btn btn-primary" style="background:var(--accent-color); color:#000; border:none; padding:0.3rem 0.8rem; border-radius:4px; cursor:pointer; font-size:0.85rem;"><i class="bi bi-search"></i></button>
+                    </div>
+                </form>
+                <div id="searchResults" style="display:flex; flex-direction:column; gap:0.4rem; max-height: 240px; overflow-y:auto;"></div>
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- ===== MODALS (direct children of body to escape transform stacking context) ===== -->
+
+    <!-- Backdrop -->
+    <div id="modalBackdrop" class="d-none" style="position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.65);z-index:9000;backdrop-filter:blur(4px);"></div>
+
+    <!-- Profile Viewer Panel -->
+    <div id="simpleProfilePanel" class="d-none" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:rgba(10,15,25,0.97);border:1px solid var(--accent-color);padding:32px 28px;border-radius:20px;z-index:9001;width:340px;max-width:92vw;box-shadow:0 30px 80px rgba(0,0,0,0.95);">
+        <div style="text-align:center;position:relative;">
+            <button onclick="window.hideViewProfileModal()" style="position:absolute;top:-10px;right:-10px;background:rgba(255,255,255,0.08);border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer;width:32px;height:32px;border-radius:50%;display:flex;align-items:center;justify-content:center;"><i class="bi bi-x-lg"></i></button>
+            <div id="simpleProfileAvatar" style="width:90px;height:90px;border-radius:50%;background:linear-gradient(45deg,var(--accent-color),#00ff88);margin:0 auto 16px;display:flex;align-items:center;justify-content:center;font-weight:bold;font-size:2.2rem;color:#000;overflow:hidden;box-shadow:0 0 20px rgba(0,255,204,0.3);"></div>
+            <h3 id="simpleProfileName" style="margin:0 0 4px 0;font-size:1.3rem;color:#fff;font-weight:700;"></h3>
+            <p id="simpleProfileId" style="margin:0 0 14px 0;font-size:0.85rem;color:var(--accent-color);font-family:monospace;letter-spacing:0.5px;"></p>
+            <div style="background:rgba(255,255,255,0.04);border:1px solid rgba(255,255,255,0.07);padding:12px 16px;border-radius:10px;margin-bottom:22px;min-height:40px;">
+                <p id="simpleProfileBio" style="margin:0;font-size:0.9rem;color:rgba(255,255,255,0.75);line-height:1.5;font-style:italic;"></p>
+            </div>
+            <div style="display:flex;gap:10px;justify-content:center;">
+                <button id="simplePanelEditBtn" onclick="window.hideViewProfileModal();window.openProfileEditor();" style="padding:10px 22px;background:var(--accent-color);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer;display:none;font-size:0.9rem;">Edit Profile</button>
+                <button id="simplePanelChatBtn" onclick="const _e=document.getElementById('simplePanelEmail').value;window.hideViewProfileModal();openChat(_e);" style="padding:10px 22px;background:var(--accent-color);color:#000;border:none;border-radius:10px;font-weight:700;cursor:pointer;display:none;font-size:0.9rem;">Send Message</button>
+            </div>
+            <input type="hidden" id="simplePanelEmail" value="">
+        </div>
+    </div>
+
+    <!-- Profile Editor Modal -->
+    <div id="profileModal" class="d-none" style="position:fixed;left:50%;top:50%;transform:translate(-50%,-50%);background:var(--bg-card);border:1px solid var(--border-color);padding:20px;border-radius:12px;z-index:9001;width:380px;max-width:92vw;box-shadow:0 16px 50px rgba(0,0,0,0.8);">
+        <h4 style="margin:0 0 14px 0;font-size:1.05rem;color:var(--text-main);">✏️ Edit Profile</h4>
+        <div style="display:flex;flex-direction:column;gap:10px;">
+            <div style="display:flex;gap:12px;align-items:center;">
+                <div id="profileModalAvatarPreview" style="width:52px;height:52px;border-radius:50%;background:var(--bg-main);display:flex;align-items:center;justify-content:center;overflow:hidden;font-weight:700;font-size:1rem;color:var(--text-main);flex-shrink:0;"></div>
+                <div style="display:flex;flex-direction:column;gap:6px;">
+                    <label for="profileAvatarInput" style="display:inline-block;background:rgba(255,255,255,0.06);color:var(--text-main);padding:6px 12px;border-radius:6px;cursor:pointer;border:1px solid var(--border-color);font-size:0.85rem;">📷 Browse…</label>
+                    <input id="profileAvatarInput" type="file" accept="image/*" style="display:none">
+                    <div id="profileAvatarFilename" style="font-size:0.7rem;color:var(--text-muted);max-width:200px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;"></div>
+                </div>
+            </div>
+            <input id="profileUserId" type="text" placeholder="@user_id" readonly style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-color);width:100%;box-sizing:border-box;background:rgba(255,255,255,0.03);color:var(--text-muted);font-family:monospace;">
+            <input id="profileDisplayName" type="text" placeholder="Display name" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-color);width:100%;box-sizing:border-box;background:transparent;color:var(--text-main);">
+            <textarea id="profileBio" rows="3" placeholder="Bio (optional)" style="padding:8px 10px;border-radius:8px;border:1px solid var(--border-color);width:100%;box-sizing:border-box;background:transparent;color:var(--text-main);resize:vertical;"></textarea>
+            <div style="display:flex;gap:10px;justify-content:flex-end;margin-top:4px;">
+                <button id="profileCancelBtn" style="padding:8px 16px;background:transparent;border:1px solid var(--border-color);color:var(--text-main);border-radius:8px;cursor:pointer;">Cancel</button>
+                <button id="profileSaveBtn" style="padding:8px 18px;background:var(--accent-color);color:#000;border:none;border-radius:8px;font-weight:700;cursor:pointer;">Save</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Full-screen image viewer -->
+    <div id="imageViewer" class="d-none" style="position:fixed;left:0;top:0;width:100%;height:100%;background:rgba(0,0,0,0.92);display:flex;align-items:center;justify-content:center;z-index:9200;">
+        <img id="imageViewerImg" src="" alt="Profile photo" style="max-width:80%;max-height:80vh;border-radius:12px;box-shadow:0 20px 60px rgba(0,0,0,0.7);object-fit:contain;"/>
+    </div>
+
+    <script src="chat-ui.js"></script>
+    <script src="theme-script.js"></script>
+</body>
+</html>

@@ -1,0 +1,573 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+<title>FYNZA — Admin Dashboard</title>
+<link rel="icon" type="image/png" href="icon.png"/>
+<link rel="preconnect" href="https://fonts.googleapis.com"/>
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin/>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet"/>
+<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css"/>
+<link rel="stylesheet" href="style.css"/>
+<script src="https://cdn.jsdelivr.net/npm/mermaid@10.6.1/dist/mermaid.min.js"></script>
+<script>
+  mermaid.initialize({ startOnLoad: false, theme: 'dark' });
+</script>
+<style>
+/* Admin-specific overrides */
+.admin-login-wrap{display:flex;align-items:center;justify-content:center;min-height:100vh;position:relative;z-index:10}
+.admin-login-card{width:100%;max-width:420px;background:rgba(10,14,23,.65);border:1px solid var(--border-color);border-radius:12px;box-shadow:0 10px 30px rgba(0,0,0,.5);backdrop-filter:blur(12px);padding:2.5rem 2rem}
+.admin-login-card h1{font-family:var(--font-heading);font-size:1.6rem;color:var(--accent-color);text-shadow:0 0 12px var(--accent-glow);margin-bottom:.4rem}
+.admin-login-card p{color:var(--text-muted);font-size:.88rem;margin-bottom:1.8rem}
+.admin-login-card .form-group{margin-bottom:1.2rem}
+.admin-login-card label{display:block;font-size:.82rem;color:var(--text-muted);margin-bottom:.4rem;font-weight:500}
+.admin-login-card input{width:100%;padding:.85rem 1rem;background:var(--bg-main);border:1px solid var(--border-color);border-radius:6px;color:var(--text-main);font-size:.9rem;outline:none;transition:border-color .2s}
+.admin-login-card input:focus{border-color:var(--accent-color);box-shadow:0 0 8px var(--accent-glow)}
+#loginError{color:#ef4444;font-size:.82rem;margin-top:.6rem;display:none}
+
+/* Dashboard */
+#dashboard{display:none}
+.admin-topbar{display:flex;align-items:center;justify-content:space-between;padding:14px 28px;background:rgba(10,14,23,.85);backdrop-filter:blur(10px);border-bottom:1px solid var(--border-color);position:sticky;top:0;z-index:100}
+.admin-topbar .brand{display:flex;align-items:center;gap:10px;font-family:var(--font-heading);font-weight:700;font-size:1.1rem;color:var(--accent-color);text-shadow:0 0 8px var(--accent-glow)}
+.badge-admin{background:var(--accent-color);color:#000;font-size:.68rem;font-weight:700;padding:3px 10px;border-radius:20px;letter-spacing:.5px}
+.btn-logout{background:transparent;border:1px solid var(--border-color);color:var(--text-muted);padding:7px 16px;border-radius:6px;cursor:pointer;font-size:.82rem;transition:all .2s}
+.btn-logout:hover{border-color:#ef4444;color:#ef4444}
+.admin-main{padding:28px;max-width:1300px;margin:0 auto;position:relative;z-index:10}
+
+/* Live indicator */
+.live-dot{width:8px;height:8px;background:#10b981;border-radius:50%;display:inline-block;animation:livePulse 1.5s infinite;margin-right:6px}
+@keyframes livePulse{0%,100%{opacity:1}50%{opacity:.3}}
+
+/* Stats */
+.stats-row{display:grid;grid-template-columns:repeat(auto-fit,minmax(170px,1fr));gap:14px;margin-bottom:28px}
+.s-card{background:rgba(10,14,23,.5);border:1px solid var(--border-color);border-radius:10px;padding:18px 20px;backdrop-filter:blur(8px);transition:border-color .2s,transform .2s}
+.s-card:hover{border-color:var(--accent-color);transform:translateY(-2px);box-shadow:0 0 15px var(--accent-glow)}
+.s-label{font-size:.72rem;color:var(--text-muted);font-weight:500;text-transform:uppercase;letter-spacing:.7px;margin-bottom:6px}
+.s-val{font-size:1.8rem;font-weight:800;color:var(--accent-color);text-shadow:0 0 10px var(--accent-glow)}
+
+/* Section heading */
+.sec-title{font-family:var(--font-heading);font-size:1.1rem;font-weight:700;margin-bottom:16px;display:flex;align-items:center;gap:8px;color:var(--text-main)}
+.sec-title i{color:var(--accent-color);font-size:1rem}
+
+/* Users table */
+.panel{background:rgba(10,14,23,.5);border:1px solid var(--border-color);border-radius:12px;padding:20px;backdrop-filter:blur(8px);margin-bottom:24px}
+.u-table{width:100%;border-collapse:collapse;font-size:.85rem}
+.u-table th{text-align:left;padding:10px 14px;color:var(--text-muted);font-weight:500;border-bottom:1px solid var(--border-color)}
+.u-table td{padding:10px 14px;border-bottom:1px solid rgba(55,65,81,.3)}
+.u-table tr:hover td{background:rgba(0,255,204,.03)}
+.u-table .uid{background:rgba(0,255,204,.1);color:var(--accent-color);padding:2px 10px;border-radius:20px;font-size:.72rem;font-family:'JetBrains Mono',monospace}
+
+/* Tabs */
+.sc-tabs{display:flex;gap:10px;margin-bottom:20px;flex-wrap:wrap}
+.sc-tab{padding:10px 22px;border-radius:8px;border:1px solid var(--border-color);background:rgba(10,14,23,.5);color:var(--text-muted);font-size:.86rem;font-weight:500;cursor:pointer;transition:all .2s;backdrop-filter:blur(6px)}
+.sc-tab:hover{border-color:var(--accent-color);color:var(--text-main)}
+.sc-tab.active{background:var(--accent-color);border-color:var(--accent-color);color:#000;font-weight:600;box-shadow:0 0 15px var(--accent-glow)}
+
+/* Demo panel */
+.demo-row{display:grid;grid-template-columns:1fr auto;gap:12px;align-items:end;margin-bottom:16px}
+.demo-row input{padding:11px 14px;background:var(--bg-main);border:1px solid var(--border-color);border-radius:8px;color:var(--text-main);font-size:.9rem;outline:none;transition:border-color .2s}
+.demo-row input:focus{border-color:var(--accent-color);box-shadow:0 0 6px var(--accent-glow)}
+.btn-run{padding:11px 22px;border:none;border-radius:8px;background:var(--accent-color);color:#000;font-size:.88rem;font-weight:600;cursor:pointer;transition:all .2s;box-shadow:0 0 10px var(--accent-glow)}
+.btn-run:hover{box-shadow:0 0 20px var(--accent-glow)}
+.btn-run:disabled{opacity:.5;cursor:not-allowed}
+
+/* Scenario description */
+.sc-desc{padding:14px 18px;border-left:3px solid var(--accent-color);background:rgba(0,255,204,.04);border-radius:0 8px 8px 0;margin-bottom:16px;font-size:.85rem;color:var(--text-muted);line-height:1.6}
+.sc-desc strong{color:var(--text-main)}
+
+/* AES key row */
+.aes-key-row{margin-bottom:14px}
+.aes-key-row label{font-size:.76rem;color:var(--text-muted);display:block;margin-bottom:5px}
+.aes-key-row input{width:100%;padding:9px 12px;background:var(--bg-main);border:1px solid var(--border-color);border-radius:8px;color:var(--accent-color);font-size:.78rem;font-family:'JetBrains Mono',monospace;outline:none}
+.aes-key-row input:focus{border-color:var(--accent-color)}
+
+/* Flow steps */
+.flow-steps{display:flex;flex-direction:column;gap:0}
+.flow-step{display:flex;gap:14px;padding:14px 0;border-bottom:1px solid rgba(55,65,81,.3);animation:fadeSlide .4s ease forwards;opacity:0}
+.flow-step:last-child{border-bottom:none}
+@keyframes fadeSlide{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:none}}
+.step-num{width:32px;height:32px;border-radius:50%;background:var(--accent-color);color:#000;display:flex;align-items:center;justify-content:center;font-size:.78rem;font-weight:700;flex-shrink:0;box-shadow:0 0 10px var(--accent-glow)}
+.step-body{flex:1}
+.step-title{font-weight:600;font-size:.88rem;margin-bottom:3px;color:var(--text-main)}
+.step-detail{font-family:'JetBrains Mono',monospace;font-size:.75rem;color:var(--text-muted);word-break:break-all;line-height:1.6}
+
+/* Result box */
+.result-box{margin-top:18px;background:rgba(10,14,23,.6);border:1px solid var(--border-color);border-radius:10px;padding:16px;backdrop-filter:blur(6px)}
+.result-row{display:flex;flex-wrap:wrap;gap:8px;align-items:baseline;margin-bottom:8px}
+.result-row:last-child{margin-bottom:0}
+.r-label{font-size:.73rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.5px;min-width:110px}
+.r-val{font-family:'JetBrains Mono',monospace;font-size:.78rem;color:var(--accent-color);word-break:break-all}
+.r-val.ok{color:#10b981}
+.r-val.elapsed{color:#f59e0b}
+.r-val.full{display:block;width:100%;background:rgba(0,255,204,.05);border:1px solid rgba(0,255,204,.15);border-radius:6px;padding:8px 10px;margin-top:4px;font-size:.72rem;line-height:1.5;max-height:120px;overflow-y:auto;user-select:all}
+
+/* Spinner */
+.spinner{display:inline-block;width:14px;height:14px;border:2px solid transparent;border-top-color:currentColor;border-radius:50%;animation:spin .6s linear infinite;vertical-align:middle;margin-right:5px}
+@keyframes spin{to{transform:rotate(360deg)}}
+
+.loading-text{color:var(--text-muted);font-size:.85rem;padding:16px 0;text-align:center}
+
+/* Mermaid Uniform Transparent Nodes */
+.mermaid .node rect, .mermaid .node polygon, .mermaid .node circle {
+    fill: transparent !important;
+    stroke: var(--border-color) !important;
+    stroke-width: 1px !important;
+}
+.mermaid .node .label {
+    color: var(--text-main) !important;
+}
+</style>
+</head>
+<body class="dark-theme">
+
+<!-- Animated Background (matches home.html) -->
+<div class="global-bg-blobs">
+  <div class="blob blob-1"></div>
+  <div class="blob blob-2"></div>
+  <div class="blob blob-3"></div>
+</div>
+<div class="cyber-particles">
+  <div class="particle p-1"></div><div class="particle p-2"></div>
+  <div class="particle p-3"></div><div class="particle p-4"></div>
+  <div class="particle p-5"></div><div class="particle p-6"></div>
+  <div class="particle p-7"></div><div class="particle p-8"></div>
+</div>
+<div class="scanlines"></div>
+
+<!-- ═══ LOGIN ═══ -->
+<div id="loginScreen" class="admin-login-wrap">
+  <div class="admin-login-card fade-in-up">
+    <div class="text-center" style="margin-bottom:1.5rem">
+      <i class="fa-solid fa-shield-halved" style="font-size:2.5rem;color:var(--accent-color);margin-bottom:.5rem;display:block"></i>
+      <h1 style="font-family: var(--font-heading); font-size: 3.5rem; font-weight: 900; color: var(--accent-color); text-shadow: 0 0 20px var(--accent-glow); letter-spacing: 4px; margin-bottom: 0.5rem; transition: color 0.1s, text-shadow 0.1s;">FYNZA</h1>
+      <p style="text-transform: uppercase; letter-spacing: 2px; font-size: 0.8rem; margin-bottom: 2rem;">Secure Admin Access</p>
+    </div>
+    <div class="form-group">
+      <label>Admin Email</label>
+      <input id="adminEmail" type="email" placeholder="admin@securechat.local" value="admin@securechat.local"/>
+    </div>
+    <div class="form-group">
+      <label>Password</label>
+      <input id="adminPass" type="password" placeholder="••••••••" value="Admin@12345"/>
+    </div>
+    <button class="btn btn-primary" style="width:100%;border:none;font-size:1rem;cursor:pointer;display:block;text-align:center" onclick="doLogin()">Sign In as Admin</button>
+    <div id="loginError"></div>
+  </div>
+</div>
+
+<!-- ═══ DASHBOARD ═══ -->
+<div id="dashboard">
+  <div class="admin-topbar">
+    <div class="brand" style="font-family: var(--font-heading); font-size: 1.8rem; font-weight: 900; letter-spacing: 3px; color: var(--accent-color); text-shadow: 0 0 15px var(--accent-glow); transition: color 0.1s, text-shadow 0.1s;">FYNZA</div>
+    <div style="display:flex;align-items:center;gap:14px">
+      <span style="font-size:.78rem;color:var(--text-muted)"><span class="live-dot"></span>Live</span>
+      <button class="btn-logout" onclick="logout()">Sign Out</button>
+    </div>
+  </div>
+
+  <div class="admin-main">
+    <!-- Stats -->
+    <div class="sec-title"><i class="fa-solid fa-chart-line"></i> System Overview</div>
+    <div class="stats-row" id="statsGrid">
+      <div class="s-card"><div class="s-label">Total Users</div><div class="s-val" id="sUsers">—</div></div>
+      <div class="s-card"><div class="s-label">Messages</div><div class="s-val" id="sMessages">—</div></div>
+      <div class="s-card"><div class="s-label">Workspaces</div><div class="s-val" id="sWorkspaces">—</div></div>
+      <div class="s-card"><div class="s-label">Channels</div><div class="s-val" id="sChannels">—</div></div>
+      <div class="s-card"><div class="s-label">Online</div><div class="s-val" id="sOnline">—</div></div>
+    </div>
+
+    <!-- Recent Users -->
+    <div class="sec-title"><i class="fa-solid fa-users"></i> Recent Users</div>
+    <div class="panel">
+      <table class="u-table">
+        <thead><tr><th>Email</th><th>Display Name</th><th>User ID</th></tr></thead>
+        <tbody id="usersBody"><tr><td colspan="3" class="loading-text">Loading…</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Workspace Tracking -->
+    <div class="sec-title"><i class="fa-solid fa-building"></i> Workspace Tracking <button onclick="loadWorkspaces()" style="background:none;border:1px solid var(--border-color);color:var(--accent-color);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:.75rem;margin-left:10px">↻ Refresh</button></div>
+    <div class="panel">
+      <table class="u-table">
+        <thead><tr><th>Workspace Name</th><th>Owner</th><th>Members</th><th>Channels</th><th>Action</th></tr></thead>
+        <tbody id="workspacesBody"><tr><td colspan="5" class="loading-text">Loading workspaces…</td></tr></tbody>
+      </table>
+    </div>
+
+    <!-- Workspace Details Modal -->
+    <div id="wsModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);padding:2rem;overflow-y:auto" onclick="if(event.target===this)closeWsModal()">
+      <div style="max-width:800px;margin:40px auto;background:var(--bg-main);border:1px solid var(--border-color);border-radius:14px;padding:24px;position:relative">
+        <button onclick="closeWsModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer">&times;</button>
+        <h2 id="wsModalTitle" style="margin-bottom:20px;color:var(--accent-color)">Workspace Details</h2>
+        
+        <div style="display:grid;grid-template-columns:1fr 1fr;gap:20px">
+          <div>
+            <h4 style="margin-bottom:10px;font-size:.9rem;color:var(--text-main)"><i class="fa-solid fa-users"></i> Members</h4>
+            <div id="wsMembersList" style="max-height:300px;overflow-y:auto;background:rgba(255,255,255,.03);border-radius:8px;padding:10px"></div>
+          </div>
+          <div>
+            <h4 style="margin-bottom:10px;font-size:.9rem;color:var(--text-main)"><i class="fa-solid fa-hashtag"></i> Channels</h4>
+            <div id="wsChannelsList" style="max-height:300px;overflow-y:auto;background:rgba(255,255,255,.03);border-radius:8px;padding:10px"></div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Active Encryption Scenario (for real messages) -->
+    <div class="sec-title"><i class="fa-solid fa-shield-halved"></i> Active Encryption Scenario</div>
+    <div id="scenarioDesc" class="sc-desc">
+      Select which encryption method is used for <strong>new real messages</strong> sent in the chat.
+    </div>
+    <div class="sc-tabs" id="scenarioTabs">
+      <button class="sc-tab" data-s="aes_gcm" onclick="setScenario(this)"><i class="fa-solid fa-key" style="margin-right:4px;"></i> AES-256-GCM</button>
+      <button class="sc-tab" data-s="ecc" onclick="setScenario(this)"><i class="fa-solid fa-draw-polygon" style="margin-right:4px;"></i> ECC / ECDH</button>
+      <button class="sc-tab active" data-s="hybrid" onclick="setScenario(this)"><i class="fa-solid fa-bolt" style="margin-right:4px;"></i> Hybrid (ECC + AES)</button>
+    </div>
+    <div id="scenarioStatus" style="font-size:.78rem;color:var(--text-muted);margin-bottom:20px"></div>
+
+    <!-- Real Messages Crypto Viewer -->
+    <div class="sec-title"><i class="fa-solid fa-lock"></i> Real Messages — Encryption Output <button onclick="loadCryptoMessages()" style="background:none;border:1px solid var(--border-color);color:var(--accent-color);padding:4px 12px;border-radius:6px;cursor:pointer;font-size:.75rem;margin-left:10px">↻ Refresh</button></div>
+    <div class="panel" id="cryptoMessagesPanel">
+      <div class="loading-text">Loading encrypted messages…</div>
+    </div>
+
+    <!-- Expanded crypto detail modal -->
+    <div id="cryptoModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.7);backdrop-filter:blur(4px);padding:2rem;overflow-y:auto" onclick="if(event.target===this)closeCryptoModal()">
+      <div style="max-width:700px;margin:40px auto;background:var(--bg-main);border:1px solid var(--border-color);border-radius:14px;padding:24px;position:relative">
+        <button onclick="closeCryptoModal()" style="position:absolute;top:12px;right:16px;background:none;border:none;color:var(--text-muted);font-size:1.2rem;cursor:pointer">&times;</button>
+        <div id="cryptoModalBody"></div>
+      </div>
+    </div>
+
+  </div>
+</div>
+
+<script>
+const API = 'http://127.0.0.1:8000';
+let token = null;
+let statsInterval = null;
+let msgInterval = null;
+let wsInterval = null;
+
+const SCENARIO_INFO = {
+  aes_gcm: '<strong>AES-256-GCM</strong> — Symmetric encryption using SHA-256(sorted_emails) as key. Fast, ideal for bulk data.',
+  ecc: '<strong>ECC / ECDH</strong> — Key derived via ECDH shared secret → SHA-256. Asymmetric key agreement without HKDF.',
+  hybrid: '<strong>Hybrid (ECDH + HKDF + AES-256-GCM)</strong> — Production-grade. ECDH → HKDF-SHA256 → AES-256-GCM.'
+};
+
+/* ── LOGIN ── */
+async function doLogin() {
+  const email = document.getElementById('adminEmail').value.trim();
+  const pass = document.getElementById('adminPass').value;
+  const errEl = document.getElementById('loginError');
+  errEl.style.display = 'none';
+  const btn = document.querySelector('#loginScreen .btn');
+  btn.innerHTML = '<span class="spinner"></span>Signing in…'; btn.disabled = true;
+  try {
+    const r = await fetch(`${API}/admin/login`, {
+      method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({Email: email, Password: pass})
+    });
+    const d = await r.json();
+    if (!r.ok) { errEl.textContent = d.detail || 'Login failed'; errEl.style.display='block'; return; }
+    token = d.access_token;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('dashboard').style.display = 'block';
+    loadStats(); loadActiveScenario(); loadCryptoMessages(); loadWorkspaces();
+    statsInterval = setInterval(loadStats, 8000);
+    msgInterval = setInterval(loadCryptoMessages, 10000);
+    wsInterval = setInterval(loadWorkspaces, 15000);
+  } catch(e) {
+    errEl.textContent = 'Cannot reach server.'; errEl.style.display = 'block';
+  } finally { btn.innerHTML = 'Sign In as Admin'; btn.disabled = false; }
+}
+
+function logout() {
+  token = null;
+  if (statsInterval) clearInterval(statsInterval);
+  if (msgInterval) clearInterval(msgInterval);
+  if (wsInterval) clearInterval(wsInterval);
+  document.getElementById('loginScreen').style.display = 'flex';
+  document.getElementById('dashboard').style.display = 'none';
+}
+
+/* ── STATS ── */
+async function loadStats() {
+  try {
+    const r = await fetch(`${API}/admin/stats`, {headers:{Authorization:`Bearer ${token}`}});
+    const d = await r.json();
+    animateValue('sUsers', d.total_users ?? 0);
+    animateValue('sMessages', d.total_messages ?? 0);
+    animateValue('sWorkspaces', d.total_workspaces ?? 0);
+    animateValue('sChannels', d.total_channels ?? 0);
+    animateValue('sOnline', d.online_users ?? 0);
+    const tbody = document.getElementById('usersBody');
+    if (!d.recent_users || !d.recent_users.length) {
+      tbody.innerHTML = '<tr><td colspan="3" class="loading-text">No users yet</td></tr>';
+    } else {
+      tbody.innerHTML = d.recent_users.map(u => `<tr>
+        <td>${esc(u.email)}</td>
+        <td>${u.display_name ? esc(u.display_name) : '<span style="color:var(--text-muted)">—</span>'}</td>
+        <td><span class="uid">${esc(u.user_id||'—')}</span></td>
+      </tr>`).join('');
+    }
+  } catch(e) {}
+}
+
+function animateValue(id, target) {
+  const el = document.getElementById(id);
+  const current = parseInt(el.textContent) || 0;
+  if (current === target) { el.textContent = target; return; }
+  const diff = target - current;
+  const steps = Math.min(Math.abs(diff), 20);
+  let i = 0;
+  const timer = setInterval(() => { i++;
+    el.textContent = Math.round(current + (diff * i / steps));
+    if (i >= steps) { el.textContent = target; clearInterval(timer); }
+  }, 30);
+}
+
+/* ── WORKSPACES ── */
+async function loadWorkspaces() {
+  try {
+    const r = await fetch(`${API}/admin/workspaces`, {headers:{Authorization:`Bearer ${token}`}});
+    const d = await r.json();
+    const tbody = document.getElementById('workspacesBody');
+    if (!d.workspaces || !d.workspaces.length) {
+      tbody.innerHTML = '<tr><td colspan="4" class="loading-text">No workspaces yet</td></tr>';
+    } else {
+      tbody.innerHTML = d.workspaces.map(w => `<tr>
+        <td style="font-weight:600">${esc(w.name)}</td>
+        <td>${esc(w.owner)}</td>
+        <td><span class="badge-admin" style="background:rgba(0,255,204,.15);color:var(--accent-color)">${w.members_count}</span></td>
+        <td><span class="badge-admin" style="background:rgba(255,255,255,.05);color:var(--text-main)">${w.channels_count}</span></td>
+        <td><button onclick="viewWsDetails(${w.id}, '${esc(w.name).replace(/'/g,"\\'")}')" style="background:none;border:1px solid var(--accent-color);color:var(--accent-color);padding:2px 8px;border-radius:4px;font-size:.7rem;cursor:pointer">View Details</button></td>
+      </tr>`).join('');
+    }
+  } catch(e) {}
+}
+
+async function viewWsDetails(id, name) {
+  document.getElementById('wsModalTitle').textContent = `Tracking: ${name}`;
+  document.getElementById('wsMembersList').innerHTML = '<div class="loading-text">Loading members…</div>';
+  document.getElementById('wsChannelsList').innerHTML = '<div class="loading-text">Loading channels…</div>';
+  document.getElementById('wsModal').style.display = 'block';
+  
+  try {
+    const r = await fetch(`${API}/admin/workspace/${id}/details`, {headers:{Authorization:`Bearer ${token}`}});
+    const d = await r.json();
+    
+    // Members
+    const mList = document.getElementById('wsMembersList');
+    if (!d.members || !d.members.length) {
+      mList.innerHTML = '<div style="color:var(--text-muted);font-size:.8rem">No members</div>';
+    } else {
+      mList.innerHTML = d.members.map(m => `
+        <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.8rem">${esc(m.email)}</span>
+          <span style="font-size:.65rem;background:rgba(255,255,255,.1);padding:2px 6px;border-radius:4px">${esc(m.role)}</span>
+        </div>
+      `).join('');
+    }
+    
+    // Channels
+    const cList = document.getElementById('wsChannelsList');
+    if (!d.channels || !d.channels.length) {
+      cList.innerHTML = '<div style="color:var(--text-muted);font-size:.8rem">No channels</div>';
+    } else {
+      cList.innerHTML = d.channels.map(c => `
+        <div style="padding:8px;border-bottom:1px solid rgba(255,255,255,.05);display:flex;justify-content:space-between;align-items:center">
+          <span style="font-size:.8rem"><i class="fa-solid fa-hashtag" style="color:var(--accent-color);margin-right:6px"></i>${esc(c.name)}</span>
+          <span style="font-size:.65rem;color:var(--text-muted)">${new Date(c.created_at).toLocaleDateString()}</span>
+        </div>
+      `).join('');
+    }
+  } catch(e) {
+    console.error(e);
+  }
+}
+
+function closeWsModal() {
+  document.getElementById('wsModal').style.display = 'none';
+}
+
+/* ── SCENARIO SWITCHING ── */
+async function loadActiveScenario() {
+  try {
+    const r = await fetch(`${API}/admin/get-scenario`, {headers:{Authorization:`Bearer ${token}`}});
+    const d = await r.json();
+    highlightTab(d.scenario);
+    document.getElementById('scenarioDesc').innerHTML = SCENARIO_INFO[d.scenario] || '';
+    document.getElementById('scenarioStatus').innerHTML = `<span class="live-dot"></span> Active scenario: <strong style="color:var(--accent-color)">${d.scenario.toUpperCase()}</strong> — all new messages will use this method.`;
+  } catch(e) {}
+}
+
+function highlightTab(scenario) {
+  document.querySelectorAll('#scenarioTabs .sc-tab').forEach(b => {
+    b.classList.toggle('active', b.dataset.s === scenario);
+  });
+}
+
+async function setScenario(el) {
+  const s = el.dataset.s;
+  try {
+    const r = await fetch(`${API}/admin/set-scenario`, {
+      method:'POST', headers:{'Content-Type':'application/json', Authorization:`Bearer ${token}`},
+      body: JSON.stringify({scenario: s})
+    });
+    const d = await r.json();
+    if (r.ok) {
+      highlightTab(d.scenario);
+      document.getElementById('scenarioDesc').innerHTML = SCENARIO_INFO[d.scenario];
+      document.getElementById('scenarioStatus').innerHTML = `<span class="live-dot"></span> Active scenario: <strong style="color:var(--accent-color)">${d.scenario.toUpperCase()}</strong> — all new messages will use this method.`;
+    }
+  } catch(e) {}
+}
+
+/* ── REAL MESSAGES CRYPTO VIEWER ── */
+async function loadCryptoMessages() {
+  const panel = document.getElementById('cryptoMessagesPanel');
+  try {
+    const r = await fetch(`${API}/admin/messages-crypto`, {headers:{Authorization:`Bearer ${token}`}});
+    const d = await r.json();
+    if (!d.messages || !d.messages.length) {
+      panel.innerHTML = '<div class="loading-text">No messages yet. Send a message in the chat to see encryption output here.</div>';
+      return;
+    }
+    let html = `<table class="u-table"><thead><tr>
+      <th>Sender</th><th>Receiver</th><th>Plaintext</th><th>Scenario</th><th>Encrypted</th><th></th>
+    </tr></thead><tbody>`;
+    d.messages.forEach((m, i) => {
+      const scenBadge = m.is_encrypted
+        ? `<span style="background:var(--accent-glow);color:var(--text-main);border:1px solid var(--accent-color);padding:2px 8px;border-radius:12px;font-size:.7rem;font-weight:600">${esc(m.scenario.toUpperCase())}</span>`
+        : '<span style="color:var(--text-muted);font-size:.72rem">plain</span>';
+      const typeBadge = m.msg_type === 'channel' 
+        ? `<span style="background:rgba(0,191,255,0.1);color:#00bfff;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:700;margin-right:4px;">CHANNEL</span>`
+        : `<span style="background:rgba(16,185,129,0.1);color:#10b981;padding:2px 6px;border-radius:4px;font-size:.65rem;font-weight:700;margin-right:4px;">DIRECT</span>`;
+      const lockIcon = m.is_encrypted ? '<i class="fa-solid fa-lock" style="color:var(--accent-color)"></i>' : '<i class="fa-solid fa-file-lines"></i>';
+      const receiverDisplay = m.msg_type === 'channel' 
+        ? `<span style="color:var(--text-muted);font-size:.7rem">${esc(m.workspace_name)} ></span> ${esc(m.channel_name)}`
+        : esc(m.receiver);
+      html += `<tr>
+        <td style="font-size:.78rem">${typeBadge} ${esc(m.sender)}</td>
+        <td style="font-size:.78rem">${receiverDisplay}</td>
+        <td style="max-width:180px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;font-size:.82rem">${esc(m.plaintext)}</td>
+        <td>${scenBadge}</td>
+        <td style="font-size:.75rem;color:var(--text-muted)">${lockIcon}</td>
+        <td>${m.is_encrypted ? `<button onclick='showCryptoDetail(${JSON.stringify(m).replace(/'/g,"&#39;")})' style="background:var(--accent-color);color:#000;border:none;padding:4px 10px;border-radius:6px;font-size:.72rem;font-weight:600;cursor:pointer">View Output</button>` : ''}</td>
+      </tr>`;
+    });
+    html += '</tbody></table>';
+    panel.innerHTML = html;
+  } catch(e) {
+    panel.innerHTML = '<div class="loading-text" style="color:#ef4444">Failed to load messages</div>';
+  }
+}
+
+/* ── CRYPTO DETAIL MODAL ── */
+function showCryptoDetail(m) {
+  const c = m.crypto || {};
+  let html = `<h3 style="font-family:var(--font-heading);margin-bottom:16px;color:var(--accent-color);font-size:1.1rem"><i class="fa-solid fa-lock"></i> Encryption Output — Message #${m.id}</h3>`;
+
+  html += kv('Sender', m.sender);
+  html += kv('Receiver', m.receiver);
+  html += kv('Timestamp', m.timestamp);
+  html += kv('Scenario', m.scenario.toUpperCase(), 'accent');
+  html += kv('Key Method', c.key_method || '—');
+  html += '<hr style="border-color:var(--border-color);margin:12px 0">';
+
+  html += kv('Plaintext', m.plaintext, 'ok');
+
+  if (c.iv) html += kvFull('IV (Base64)', c.iv);
+  if (c.ciphertext) html += kvFull('Ciphertext (Base64)', c.ciphertext);
+  if (c.tag) html += kvFull('Auth Tag (Base64)', c.tag);
+
+  html += '<hr style="border-color:var(--border-color);margin:12px 0">';
+  html += '<div style="font-size:.78rem;font-weight:600;color:var(--text-muted);margin-bottom:8px;text-transform:uppercase;letter-spacing:.5px">Key Derivation Details</div>';
+
+  if (c.sender_public_key) html += kvFull('Sender Public Key', c.sender_public_key);
+  if (c.receiver_public_key) html += kvFull('Receiver Public Key', c.receiver_public_key);
+
+  if (c.aes_key_hex) html += kvFull('AES Key (Hex)', c.aes_key_hex);
+  if (c.shared_secret_hex) html += kvFull('ECDH Shared Secret (Hex)', c.shared_secret_hex);
+  if (c.derived_key_hex) html += kvFull('Derived AES Key (Hex)', c.derived_key_hex);
+
+  if (c.error) html += kv('Error', c.error, 'err');
+
+  // Mermaid Diagram
+  let diagram = '';
+  if (m.scenario === 'aes_gcm') {
+    diagram = `flowchart TD
+      A[Sender Email] --> C[Key Material]
+      B[Receiver Email] --> C
+      C -->|SHA-256| D[256-bit AES Key]
+      D -->|AES-GCM| E[Ciphertext + Tag + IV]`;
+  } else if (m.scenario === 'ecc') {
+    diagram = `flowchart TD
+      A[Sender SECP256R1 Key] -->|ECDH| C(Shared Secret)
+      B[Receiver SECP256R1 Key] -->|ECDH| C
+      C -->|SHA-256| D[256-bit AES Key]
+      D -->|AES-GCM| E[Ciphertext + Tag + IV]`;
+  } else if (m.scenario === 'hybrid') {
+    diagram = `flowchart TD
+      A[Sender SECP256R1 Key] -->|ECDH| C(Shared Secret)
+      B[Receiver SECP256R1 Key] -->|ECDH| C
+      C -->|HKDF-SHA256| D[256-bit AES Key]
+      D -->|AES-GCM| E[Ciphertext + Tag + IV]`;
+  }
+  
+  if (diagram) {
+    html += '<hr style="border-color:var(--border-color);margin:16px 0">';
+    html += '<div style="font-size:.78rem;font-weight:600;color:var(--text-muted);margin-bottom:12px;text-transform:uppercase;letter-spacing:.5px">Encryption Flow Diagram</div>';
+    html += `<div class="mermaid" style="text-align:center;background:rgba(0,0,0,0.3);padding:1rem;border-radius:8px">${diagram}</div>`;
+  }
+
+  document.getElementById('cryptoModalBody').innerHTML = html;
+  document.getElementById('cryptoModal').style.display = 'block';
+  
+  // Render diagram
+  if (diagram) {
+    setTimeout(() => {
+      try {
+        mermaid.init(undefined, document.querySelectorAll('.mermaid'));
+      } catch (e) { console.error('Mermaid init error:', e); }
+    }, 50);
+  }
+}
+
+function closeCryptoModal() {
+  document.getElementById('cryptoModal').style.display = 'none';
+}
+
+function kv(label, val, cls='') {
+  const color = cls === 'ok' ? '#10b981' : cls === 'accent' ? 'var(--accent-color)' : cls === 'err' ? '#ef4444' : 'var(--text-main)';
+  return `<div style="display:flex;gap:8px;margin-bottom:6px;align-items:baseline">
+    <span style="font-size:.73rem;font-weight:600;color:var(--text-muted);min-width:110px;text-transform:uppercase;letter-spacing:.4px">${label}</span>
+    <span style="font-size:.82rem;color:${color};word-break:break-all">${esc(String(val))}</span></div>`;
+}
+function kvFull(label, val) {
+  return `<div style="margin-bottom:8px">
+    <div style="font-size:.73rem;font-weight:600;color:var(--text-muted);text-transform:uppercase;letter-spacing:.4px;margin-bottom:4px">${label}</div>
+    <div style="font-family:'JetBrains Mono',monospace;font-size:.72rem;color:var(--accent-color);background:var(--bg-main);border:1px solid var(--accent-color);border-radius:6px;padding:8px 10px;word-break:break-all;line-height:1.5;max-height:100px;overflow-y:auto;user-select:all">${esc(String(val))}</div></div>`;
+}
+
+function esc(s) { return s.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;'); }
+
+/* Enter key */
+document.addEventListener('keydown', e => {
+  if (e.key === 'Enter' && document.getElementById('loginScreen').style.display !== 'none') doLogin();
+  if (e.key === 'Escape') closeCryptoModal();
+});
+
+/* Fade-in on load */
+document.addEventListener('DOMContentLoaded', () => {
+  document.querySelectorAll('.fade-in-up').forEach(el => {
+    setTimeout(() => el.classList.add('appear'), 100);
+  });
+});
+</script>
+<script src="theme-script.js"></script>
+</body>
+</html>
+

@@ -1,0 +1,287 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FYNZA - Home</title>
+    <link rel="icon" type="image/png" href="icon.png">
+    
+    <!-- Google Fonts (from protflio) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600&family=Poppins:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+    
+    <!-- Font Awesome (for icons) -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <!-- Bootstrap Icons (Required by JS) -->
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.5/font/bootstrap-icons.css" rel="stylesheet">
+    
+    <!-- CSS -->
+    <link rel="stylesheet" href="style.css">
+    
+    <style>
+        /* Authentication Box Styles */
+        .auth-container {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 4rem 2rem;
+            position: relative;
+            z-index: 10;
+        }
+        .auth-box {
+            width: 100%;
+            max-width: 450px;
+            background: rgba(10, 14, 23, 0.6); /* Match portfolio card */
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+        }
+        .form-icon {
+            font-size: 2.5rem;
+            color: var(--accent-color);
+            margin-bottom: 0.5rem;
+        }
+        .d-none { display: none !important; }
+        .text-center { text-align: center; }
+        .mt-3 { margin-top: 1rem; }
+        .mb-3 { margin-bottom: 1rem; }
+        
+        /* Modern Tabs */
+        .auth-tabs {
+            display: flex;
+            border-top: 1px solid var(--border-color);
+            margin-top: 1.5rem;
+        }
+        .auth-tab {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            cursor: pointer;
+            color: var(--text-muted);
+            font-weight: 500;
+            transition: all 0.3s;
+            border-top: 2px solid transparent;
+        }
+        .auth-tab:hover {
+            color: var(--text-main);
+        }
+        .auth-tab.active {
+            color: var(--accent-color);
+            border-top-color: var(--accent-color);
+        }
+
+        .input-group {
+            display: flex;
+            position: relative;
+        }
+        .input-group input {
+            padding-right: 40px;
+            width: 100%;
+        }
+        .input-group button {
+            position: absolute;
+            right: 0;
+            top: 0;
+            height: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-muted);
+            padding: 0 1rem;
+            cursor: pointer;
+        }
+        .form-message { margin-bottom: 1rem; color: var(--accent-color); text-align: center; font-size: 0.9rem; }
+        .live-checklist { list-style: none; padding: 0; margin-top: 0.5rem; font-size: 0.85rem; color: var(--text-muted); }
+        .live-inline-hint { color: var(--text-muted); font-size: 0.85rem; margin-top: 0.5rem; }
+        
+        a.auth-link {
+            color: var(--accent-color);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        a.auth-link:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body class="dark-theme">
+
+    <!-- Global Animated Background -->
+    <div class="global-bg-blobs">
+        <div class="blob blob-1"></div>
+        <div class="blob blob-2"></div>
+        <div class="blob blob-3"></div>
+    </div>
+    
+    <!-- Cyber Particles & Scanline -->
+    <div class="cyber-particles">
+        <div class="particle p-1"></div>
+        <div class="particle p-2"></div>
+        <div class="particle p-3"></div>
+        <div class="particle p-4"></div>
+        <div class="particle p-5"></div>
+        <div class="particle p-6"></div>
+        <div class="particle p-7"></div>
+        <div class="particle p-8"></div>
+    </div>
+    <div class="scanlines"></div>
+
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero">
+        <div class="container hero-container" style="justify-content:center; text-align:center;">
+            <div class="hero-content fade-in-up" style="max-width:800px; margin:0 auto;">
+                <h1 class="name" style="font-family: var(--font-heading); font-size: clamp(5rem, 15vw, 10rem); font-weight: 900; margin-bottom: 0.5rem; color: var(--accent-color); text-shadow: 0 0 30px var(--accent-glow), 0 0 60px var(--accent-glow); transition: color 0.1s, text-shadow 0.1s; letter-spacing: 5px;">FYNZA</h1>
+                <h2 style="color: var(--text-muted); font-weight: 400; letter-spacing: 3px; font-size: clamp(1rem, 3vw, 1.5rem); margin-bottom: 3rem; text-transform: uppercase;">Your security is our priority</h2>
+                <div class="hero-buttons" style="justify-content:center;">
+                    <button class="btn btn-primary" onclick="showForm('loginForm')">Sign In</button>
+                    <button class="btn btn-secondary" onclick="showForm('registerForm')">Sign up</button>
+                </div>
+            </div>
+        </div>
+        <div class="hero-bg-effect"></div>
+    </section>
+
+    <!-- Unified Authentication Section -->
+    <section id="auth-section" class="section d-none">
+        <div class="container auth-container">
+            <div class="auth-box fade-in-up">
+                <div class="contact-form" style="padding: 2rem;">
+                    
+                    <!-- Login Form -->
+                    <form id="loginForm" class="d-none" onsubmit="login(event)" autocomplete="on" novalidate>
+                        <div class="text-center mb-3">
+                            <i class="fa-solid fa-shield-halved form-icon"></i>
+                            <h2 style="color: var(--text-main); margin-bottom:0.5rem;">Sign In</h2>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Welcome back to FYNZA</p>
+                        </div>
+                        <div id="loginMessage" class="form-message" role="alert"></div>
+                        <div class="form-group">
+                            <label for="loginEmail">Email address</label>
+                            <input id="loginEmail" name="email" type="email" placeholder="name@example.com" required autocomplete="username">
+                        </div>
+                        <div class="form-group">
+                            <label for="loginPassword">Password</label>
+                            <div class="input-group">
+                                <input id="loginPassword" name="password" type="password" placeholder="••••••••" required autocomplete="current-password">
+                                <button type="button" onclick="togglePassword('loginPassword', 'loginEyeIcon')">
+                                    <i id="loginEyeIcon" class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                        </div>
+                        <button type="submit" id="loginSubmit" class="btn btn-primary" style="width: 100%; margin-top: 1rem; display: block; text-align: center; border: none; font-size: 1.1rem; cursor: pointer;">Sign in</button>
+                        <div class="text-center mt-3" style="font-size: 0.9rem;">
+                            <a href="#reset" class="auth-link" style="color: var(--text-muted);" onclick="showForm('resetForm'); return false;">Forgot your password?</a>
+                        </div>
+                    </form>
+
+                    <!-- Register Form -->
+                    <form id="registerForm" class="d-none" onsubmit="registerAccount(event)" autocomplete="on" novalidate>
+                        <div class="text-center mb-3">
+                            <i class="fa-solid fa-user-plus form-icon"></i>
+                            <h2 style="color: var(--text-main); margin-bottom:0.5rem;">Create account</h2>
+                        </div>
+                        <div id="registerMessage" class="form-message" role="alert"></div>
+                        <div id="registerSmtpHint" class="smtp-config-hint d-none" role="status"></div>
+                        <div class="form-group">
+                            <label for="regEmail">Email address</label>
+                            <input id="regEmail" type="email" placeholder="name@gmail.com" required autocomplete="email">
+                        </div>
+                        <div id="registerOtpSentBanner" class="d-none mb-3" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--accent-color); padding: 10px; border-radius: 4px; color: var(--accent-color); font-size: 0.85rem;">
+                            <i class="fa-solid fa-circle-check"></i> Verification code sent. Check inbox.
+                        </div>
+                        <div class="form-group">
+                            <label for="regOtpInput">Verification code</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input id="regOtpInput" name="otp_code" type="text" inputmode="numeric" maxlength="6" pattern="[0-9]{6}" placeholder="000000" style="flex: 1;">
+                                <button type="button" id="registerSendOtpBtn" class="btn btn-secondary" style="padding: 0 1rem; border:none; cursor:pointer;" onclick="requestSignupOtp()">Send code</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="regPassword">Password</label>
+                            <div class="input-group">
+                                <input id="regPassword" type="password" placeholder="Strong password" required minlength="8">
+                                <button type="button" onclick="togglePassword('regPassword', 'regEyeIcon')">
+                                    <i id="regEyeIcon" class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <ul id="regPasswordChecks" class="live-checklist"></ul>
+                        </div>
+                        <div class="form-group">
+                            <label for="regConfirmPassword">Confirm password</label>
+                            <div class="input-group">
+                                <input id="regConfirmPassword" type="password" placeholder="Re-enter password" required minlength="8">
+                                <button type="button" onclick="togglePassword('regConfirmPassword', 'regConfirmEyeIcon')">
+                                    <i id="regConfirmEyeIcon" class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <p id="regConfirmMatch" class="live-inline-hint"></p>
+                        </div>
+                        <button type="submit" id="registerSubmit" class="btn btn-primary" style="width: 100%; display: block; text-align: center; border:none; font-size:1.1rem; cursor:pointer;">Create account</button>
+                    </form>
+
+                    <!-- Reset Password Form -->
+                    <form id="resetForm" class="d-none" onsubmit="submitPasswordReset(event)" autocomplete="on" novalidate>
+                        <div class="text-center mb-3">
+                            <i class="fa-solid fa-key form-icon"></i>
+                            <h2 style="color: var(--text-main); margin-bottom: 0.5rem;">Reset password</h2>
+                            <p style="color: var(--text-muted); font-size: 0.9rem;">Enter your email to receive a code.</p>
+                        </div>
+                        <div id="resetMessage" class="form-message" role="alert"></div>
+                        <div id="smtpConfigHint" class="d-none"></div>
+                        <div id="otpSentBanner" class="d-none mb-3" style="background: rgba(0, 255, 204, 0.1); border: 1px solid var(--accent-color); padding: 10px; border-radius: 4px; color: var(--accent-color); font-size: 0.85rem;">
+                            <i class="fa-solid fa-circle-check"></i> Verification code sent. Check inbox.
+                        </div>
+                        <div class="form-group">
+                            <label for="resetEmail">Email address</label>
+                            <input id="resetEmail" type="email" placeholder="name@gmail.com" required>
+                        </div>
+                        <div class="form-group">
+                            <label for="resetOtpInput">Verification code</label>
+                            <div style="display: flex; gap: 10px;">
+                                <input id="resetOtpInput" name="otp_code" type="text" maxlength="6" placeholder="000000" style="flex: 1;">
+                                <button type="button" id="resetSendOtpBtn" class="btn btn-secondary" style="padding: 0 1rem; border:none; cursor:pointer;" onclick="requestResetOtp()">Send code</button>
+                            </div>
+                        </div>
+                        <div class="form-group">
+                            <label for="resetNewPassword">New password</label>
+                            <div class="input-group">
+                                <input id="resetNewPassword" name="new_password" type="password" placeholder="Strong password" required minlength="8">
+                                <button type="button" onclick="togglePassword('resetNewPassword', 'resetEyeIcon')">
+                                    <i id="resetEyeIcon" class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <ul id="resetPasswordChecks" class="live-checklist"></ul>
+                        </div>
+                        <div class="form-group">
+                            <label for="resetConfirmPassword">Confirm password</label>
+                            <div class="input-group">
+                                <input id="resetConfirmPassword" type="password" placeholder="Re-enter password" required minlength="8">
+                                <button type="button" onclick="togglePassword('resetConfirmPassword', 'resetConfirmEyeIcon')">
+                                    <i id="resetConfirmEyeIcon" class="bi bi-eye"></i>
+                                </button>
+                            </div>
+                            <p id="resetConfirmMatch" class="live-inline-hint"></p>
+                        </div>
+                        <button type="submit" id="resetSubmit" class="btn btn-primary" style="width: 100%; display: block; text-align: center; border:none; font-size:1.1rem; cursor:pointer;">Reset password</button>
+                        <div class="text-center mt-3" style="font-size: 0.9rem;">
+                            <a href="#login" class="auth-link" onclick="showForm('loginForm'); return false;"><i class="fa-solid fa-arrow-left" style="margin-right: 5px;"></i>Back to sign in</a>
+                        </div>
+                    </form>
+
+                </div>
+            </div>
+        </div>
+    </section>
+
+
+
+
+
+    <!-- JS -->
+    <script src="file.js"></script>
+    <script src="theme-script.js"></script>
+    <!-- End of JS -->
+</body>
+</html>
