@@ -106,3 +106,4 @@ Distributed under the MIT License. See `LICENSE` for more information.
 <div align="center">
   <i>Built with ❤️ by the FYNZA Team</i>
 </div>
+.
