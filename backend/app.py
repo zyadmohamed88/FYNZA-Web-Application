@@ -507,7 +507,7 @@ def register(data: RegisterWithOtp):
                 email_warning = "Unexpected error while sending email."
 
         resp = {
-            "message": "تم إنشاء الحساب بنجاح",
+            "message": "Account Created",
             "email_sent": email_sent,
             "id": numeric_id,
             "user_id": user_id,

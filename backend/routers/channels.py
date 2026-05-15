@@ -156,7 +156,7 @@ def create_channel(data: ChannelCreate, user_email: str):
     _require_workspace_role(data.workspace_id, user_email, "member")
     con, cursor = get_db()
 
-    name = data.name.strip().lower().replace(" ", "-")
+    name = data.name.strip().replace(" ", "-")
     if not name:
         raise HTTPException(400, "Channel name is required")
 
@@ -819,7 +819,7 @@ def update_channel(channel_id: int, data: ChannelUpdate, user_email: str):
     updates = []
     params = []
     if data.name is not None:
-        name = data.name.strip().lower().replace(" ", "-")
+        name = data.name.strip().replace(" ", "-")
         if not name: raise HTTPException(400, "Channel name cannot be empty")
         # Ensure unique in workspace
         if name != current_name:

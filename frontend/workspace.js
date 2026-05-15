@@ -1143,7 +1143,7 @@ async function submitEditCH() {
       method: 'PATCH',
       body: JSON.stringify({ name: newName, description: newDesc })
     });
-    currentCH.name = newName.toLowerCase().replace(/ /g, "-");
+    currentCH.name = newName.replace(/ /g, "-");
     currentCH.description = newDesc;
     document.getElementById('chTitle').textContent = '#' + currentCH.name;
     document.getElementById('chDesc').textContent = currentCH.description;
